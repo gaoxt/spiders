@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	Host     = "47.240.95.242:6379"
-	Password = "www.ak123.com"
+	Host     = "redis"
+	Password = ""
 	Db       = 0
 )
 
