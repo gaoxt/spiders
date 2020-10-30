@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type BookIndex struct {
 	ID         int     `json:"Id"`
 	Name       string  `json:"Name"`
@@ -20,4 +22,19 @@ type BookDetail struct {
 	FileDuration  int    `json:"FileDuration"`
 	CreateDate    string `json:"CreateDate"`
 	FilePath      string `json:"FilePath"`
+}
+
+// FromJsonObj
+func FromJsonObj(o interface{}) (BookIndex, error) {
+	var bookIndex BookIndex
+
+	s, err := json.Marshal(o)
+	if err != nil {
+		return bookIndex, err
+	}
+
+	err = json.Unmarshal(s, &bookIndex)
+
+	return bookIndex, err
+
 }

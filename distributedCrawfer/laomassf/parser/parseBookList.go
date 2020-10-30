@@ -1,25 +1,24 @@
 package parser
 
 import (
+	"distributedCrawfer/engine"
+	"distributedCrawfer/helper"
+	"distributedCrawfer/model"
 	"encoding/json"
-	"spiders/engine"
-	"spiders/helper"
-	"spiders/model"
-	"strconv"
 )
 
-func ParseBookList(contents []byte) engine.ParserResult {
+func ParseBookList(contents []byte, _ string) engine.ParserResult {
 
 	firstData := helper.ParserData(string(contents))
 	secondData := helper.ParserData(firstData["d"])
 	var wxBookListObj []wxBookList
 	if secondData["Data"] == nil {
-		return engine.NilParser()
+		return engine.ParserResult{}
 	}
 	_ = json.Unmarshal([]byte(secondData["Data"].(string)), &wxBookListObj)
 	lenWxBookListObj := len(wxBookListObj)
 	if lenWxBookListObj == 0 {
-		return engine.NilParser()
+		return engine.ParserResult{}
 	}
 	result := engine.ParserResult{}
 	for i := 0; i < lenWxBookListObj; i++ {
@@ -35,14 +34,16 @@ func ParseBookList(contents []byte) engine.ParserResult {
 		bookIndex.Detail = nil
 
 		jsonStr, _ := json.Marshal(map[string]int{"bookId": bookID})
-		result.Items = append(result.Items, "List "+strconv.Itoa(bookID)+" "+wxBookListObj[i].Name)
 		result.Requests = append(result.Requests, engine.Request{
 			Url:      "https://wx.laomassf.com/prointerface/MiniApp/Index.asmx/GetAudioList",
 			PostData: jsonStr,
-			ParserFunc: func(c []byte) engine.ParserResult {
-				return ParseBookDetail(c, bookIndex)
-			},
+			Parser:   NewParseBookDetailFormat(bookIndex),
 		})
+		// result.Requests = append(result.Requests, engine.Request{
+		// 	Url:      "https://wx.laomassf.com/prointerface/MiniApp/Index.asmx/GetAudioList",
+		// 	PostData: jsonStr,
+		// 	Parser:   engine.NewFuncParser(ParseBookList, config.ParseBookList),
+		// })
 	}
 
 	return result

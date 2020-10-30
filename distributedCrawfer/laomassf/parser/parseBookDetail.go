@@ -1,14 +1,14 @@
 package parser
 
 import (
+	"distributedCrawfer/config"
+	"distributedCrawfer/engine"
+	"distributedCrawfer/helper"
+	"distributedCrawfer/model"
 	"encoding/json"
-	"spiders/engine"
-	"spiders/helper"
-	"spiders/laomassf/storage"
-	"spiders/model"
 )
 
-func ParseBookDetail(contents []byte, bookIndex model.BookIndex) engine.ParserResult {
+func ParseBookDetail(contents []byte, bookIndex model.BookIndex, url string) engine.ParserResult {
 	firstData := helper.ParserData(string(contents))
 	secondData := helper.ParserData(firstData["d"])
 	var wxBooksObj []wxBookDetail
@@ -26,10 +26,33 @@ func ParseBookDetail(contents []byte, bookIndex model.BookIndex) engine.ParserRe
 	}
 	bookIndex.Detail = bookDetailObj
 	result := engine.ParserResult{
-		Items: []interface{}{"Detail " + bookIndex.Name},
-		StorageFunc: func(c interface{}) engine.StorageResult {
-			return storage.BookInsert(bookIndex)
+		Items: []engine.Item{
+			{
+				Url:     url,
+				Type:    config.TypeName,
+				Id:      bookIndex.Name,
+				Payload: bookIndex,
+			},
 		},
 	}
+
 	return result
+}
+
+type ParseBookDetailFormat struct {
+	bookIndex model.BookIndex
+}
+
+func (p *ParseBookDetailFormat) Parse(contents []byte, url string) engine.ParserResult {
+	return ParseBookDetail(contents, p.bookIndex, url)
+}
+
+func (p *ParseBookDetailFormat) Serialized() (name string, args interface{}) {
+	return config.ParseBookDetail, p.bookIndex
+}
+
+func NewParseBookDetailFormat(bookIndex model.BookIndex) *ParseBookDetailFormat {
+	return &ParseBookDetailFormat{
+		bookIndex: bookIndex,
+	}
 }
